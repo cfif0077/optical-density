@@ -29,13 +29,6 @@ class Photo:
 
 photo = Photo()
 
-def save():
-    ext = photo.path.split(".")[-1]
-    file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[(
-        "All Files", "*.*"), ("PNG file", "*.png"), ("jpg file", "*.jpg")])
-    if file:
-            photo.image.save(file)
-
 def b3(event):
     rgb = photo.image_resize.getpixel((event.x, event.y))
     print(event.x, event.y)
