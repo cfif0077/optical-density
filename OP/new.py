@@ -38,19 +38,24 @@ def b3(event):
 
 root.bind('<Button-3>', b3)
 
-btn1 = Button(root, text="Выбор фото", width=12, font=('ariel 15 bold'), command=photo.select)
-btn1.place(x=50, y=595)
+frame_photo = Frame(root)
+frame_setting = Frame(root)
+frame_photo.pack(fill=BOTH)
+frame_setting.pack()
 
-btn2 = Button(root, text="Сохранение", width=12, font=('ariel 15 bold'), command=photo.save)
-btn2.place(x=240, y=595)
+btn1 = Button(frame_setting, text="Выбор фото", width=12, font=('ariel 15 bold'), command=photo.select)
+btn1.pack(side=LEFT)
 
-btn3 = Button(root, text="Выход", width=12, font=('ariel 15 bold'), command=root.destroy)
-btn3.place(x=450, y=595)
+btn2 = Button(frame_setting, text="Сохранение", width=12, font=('ariel 15 bold'), command=photo.save)
+btn2.pack(side=LEFT)
 
-canvas2 = Canvas(root, width="600", height="420")
-canvas2.place(x=0, y=0)
+btn3 = Button(frame_setting, text="Выход", width=12, font=('ariel 15 bold'), command=root.destroy)
+btn3.pack(side=LEFT)
 
-canvas3 = Canvas(root, width="40", height="40", relief=RIDGE, bd=2)
-canvas3.place(x=550, y=450)
+canvas2 = Canvas(frame_photo, width=600, height=420,bg="red")
+canvas2.pack(fill=BOTH,side=TOP)
+
+canvas3 = Canvas(frame_setting, width="40", height="40", relief=RIDGE, bd=2)
+canvas3.pack(side=LEFT)
 
 root.mainloop()
