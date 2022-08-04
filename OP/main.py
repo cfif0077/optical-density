@@ -4,9 +4,8 @@ from tkinter import filedialog
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from PIL import Image, ImageTk, ImageFilter, ImageEnhance, ImageOps
 import os
-from time import sleep
 
-# создание окна
+
 root = Tk()  # Создание окна
 root.title("Оптическая плотность")  # название программы
 root.geometry("640x640")  # Размер окна
