@@ -41,7 +41,7 @@ root.bind('<Button-3>', b3)
 btn1 = Button(root, text="Выбор фото", width=12, font=('ariel 15 bold'), command=photo.select)
 btn1.place(x=50, y=595)
 
-btn2 = Button(root, text="Сохранение", width=12, font=('ariel 15 bold'), command=save)
+btn2 = Button(root, text="Сохранение", width=12, font=('ariel 15 bold'), command=photo.save)
 btn2.place(x=240, y=595)
 
 btn3 = Button(root, text="Выход", width=12, font=('ariel 15 bold'), command=root.destroy)
