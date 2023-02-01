@@ -11,10 +11,12 @@ class Photo:
     def __init__(self):
         self.flag = False
         self.size = (640, 420)
+        self.rgb = None
 
     def out(self):
         self.flag = True
-        self.image_resize = self.image.resize(self.size, Image.Resampling.LANCZOS)
+        self.image_resize = self.image.resize(self.size)
+        self.image_clean_resize = self.image_clean.resize(self.size)
         self.image_out = ImageTk.PhotoImage(self.image_resize)
         canvas2.delete("IMG")
         canvas2.create_image(0, 0, anchor=NW, image=self.image_out, tags="IMG")
@@ -30,13 +32,12 @@ class Photo:
         file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[("All Files", "*.*")])
         self.image.save(file)
 
-    def resize(self, size=(640, 420)):
+    def resize(self, event):
         if self.flag:
-            if size != (640, 420):
-                self.size = size
+            self.size = (event.width, event.height)
             self.out()
 
-    def test(self, event):
+    def test(self):
         # split the image into individual bands
         source = self.image_clean.split()
         r, g, b = 0, 1, 2
@@ -52,11 +53,11 @@ class Photo:
         source[g].paste(out, None, Image.fromarray(mask_all))
         # build a new image
         self.image = Image.merge(self.image.mode, source)
-        self.resize()
+        self.out()
 
     def test1(self):
         self.image = self.image_clean
-        self.resize()
+        self.out()
 
     def brightness(self, event):
         image_for_brightness = ImageEnhance.Brightness(self.image_clean)
@@ -70,13 +71,9 @@ class Photo:
 
 
 def b3(event):
-    photo.rgb = photo.image_resize.getpixel((event.x, event.y))
-    print(photo.rgb)
+    photo.rgb = photo.image_clean_resize.getpixel((event.x, event.y))
     canvas3['bg'] = '#%02x%02x%02x' % photo.rgb
-
-
-def resize(event):
-    photo.resize((event.width, event.height))
+    checkbutton_changed()
 
 
 photo = Photo()
@@ -132,9 +129,10 @@ scale_contrast.pack(side=LEFT)
 
 
 # окно настроек счета
-def checkbutton_changed(event=0):
+def checkbutton_changed(event=1):
     if enabled.get() == 1:
-        photo.test(event)
+        if photo.rgb is not None:
+            photo.test()
     else:
         photo.test1()
 
@@ -171,6 +169,6 @@ main_menu.add_cascade(label="Тех. поддержка", command=help_click)
 root.config(menu=main_menu)
 
 root.bind('<Button-3>', b3)
-root.bind("<Configure>", resize)
+root.bind("<Configure>", photo.resize)
 
 root.mainloop()
