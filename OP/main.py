@@ -6,6 +6,7 @@ from PIL import Image, ImageTk, ImageEnhance
 import os
 from numpy import asarray
 
+
 class Photo:
     def __init__(self):
         self.flag = False
@@ -35,22 +36,21 @@ class Photo:
                 self.size = size
             self.out()
 
-    def test(self,event):
+    def test(self, event):
         # split the image into individual bands
         source = self.image_clean.split()
-        R, G, B = 0, 1, 2
+        r, g, b = 0, 1, 2
         # select regions where red is less than 200
-        razm = v1.get()
-        mask_r = source[R].point(lambda i: -razm <= i - self.rgb[R] <= razm and 255)
-        mask_g = source[G].point(lambda i: -razm <= i - self.rgb[G] <= razm and 255)
-        mask_b = source[B].point(lambda i: -razm <= i - self.rgb[B] <= razm and 255)
+        error = v1.get()
+        mask_r = source[r].point(lambda i: -error <= i - self.rgb[r] <= error and 255)
+        mask_g = source[g].point(lambda i: -error <= i - self.rgb[g] <= error and 255)
+        mask_b = source[b].point(lambda i: -error <= i - self.rgb[b] <= error and 255)
         mask_all = asarray(mask_r)*asarray(mask_g)*asarray(mask_b)
         # process the green band
-        out = source[G].point(lambda i: i * 2)
+        out = source[g].point(lambda i: i * 2)
         # paste the processed band back, but only where red was < 100
-        source[G].paste(out, None, Image.fromarray(mask_all))
-        #print(asarray(source[G]))
-        # build a new multiband image
+        source[g].paste(out, None, Image.fromarray(mask_all))
+        # build a new image
         self.image = Image.merge(self.image.mode, source)
         self.resize()
 
@@ -58,23 +58,26 @@ class Photo:
         self.image = self.image_clean
         self.resize()
 
-    def brightness(self,event):
-        imgg = ImageEnhance.Brightness(self.image_clean)
-        self.image = imgg.enhance(var_bright.get() + 1)
+    def brightness(self, event):
+        image_for_brightness = ImageEnhance.Brightness(self.image_clean)
+        self.image = image_for_brightness.enhance(var_bright.get() + 1)
         self.out()
 
-    def contrast(self,event):
-        imgg = ImageEnhance.Contrast(self.image_clean)
-        self.image = imgg.enhance(var_contrast.get() + 1)
+    def contrast(self, event):
+        image_for_contrast = ImageEnhance.Contrast(self.image_clean)
+        self.image = image_for_contrast.enhance(var_contrast.get() + 1)
         self.out()
+
 
 def b3(event):
     photo.rgb = photo.image_resize.getpixel((event.x, event.y))
     print(photo.rgb)
     canvas3['bg'] = '#%02x%02x%02x' % photo.rgb
 
+
 def resize(event):
     photo.resize((event.width, event.height))
+
 
 photo = Photo()
 
@@ -91,57 +94,61 @@ frame_setting.pack(fill=Y)
 frame_setting_photo = Frame(root)
 frame_setting_photo.pack(fill=Y)
 
-frame_setting_calculat = Frame(root)
-frame_setting_calculat.pack(fill=Y)
+frame_setting_calculate = Frame(root)
+frame_setting_calculate.pack(fill=Y)
 
 
-#окно с фото
+# окно с фото
 canvas2 = Canvas(frame_photo, width=600, height=420)
 canvas2.pack(fill=BOTH, expand=1)
 
 
-#окно настроек выбора
-btn_select = Button(frame_setting, text="Выбор фото", width=12, font=('ariel 15 bold'), command=photo.select)
+# окно настроек выбора
+btn_select = Button(frame_setting, text="Выбор фото", width=12, font='ariel 15 bold', command=photo.select)
 btn_select.pack(side=LEFT)
 
-btn_save = Button(frame_setting, text="Сохранение", width=12, font=('ariel 15 bold'), command=photo.save)
+btn_save = Button(frame_setting, text="Сохранение", width=12, font='ariel 15 bold', command=photo.save)
 btn_save.pack(side=LEFT)
 
-btn_exit = Button(frame_setting, text="Выход", width=6, font=('ariel 15 bold'), command=root.destroy)
+btn_exit = Button(frame_setting, text="Выход", width=6, font='ariel 15 bold', command=root.destroy)
 btn_exit.pack(side=LEFT)
 
-#окно настрое фото
-#яркость
-bright = Label(frame_setting_photo, text="Яркость:", font=("ariel 15 bold"))
+# окно настроек фото
+# яркость
+bright = Label(frame_setting_photo, text="Яркость:", font="ariel 15 bold")
 bright.pack(side=LEFT)
 var_bright = IntVar()
-scale_bright = Scale(frame_setting_photo, from_=0, to=10, variable=var_bright, orient=HORIZONTAL, command=photo.brightness)
+scale_bright = Scale(frame_setting_photo, from_=0, to=10, variable=var_bright,
+                     orient=HORIZONTAL, command=photo.brightness)
 scale_bright.pack(side=LEFT)
 
-#Контрастность
-contrast = Label(frame_setting_photo, text="Контраст:", font=("ariel 17 bold"))
+# Контрастность
+contrast = Label(frame_setting_photo, text="Контраст:", font="ariel 17 bold")
 contrast.pack(side=LEFT)
 var_contrast = IntVar()
-scale_contrast = Scale(frame_setting_photo, from_=0, to=10, variable=var_contrast, orient=HORIZONTAL, command=photo.contrast)
+scale_contrast = Scale(frame_setting_photo, from_=0, to=10, variable=var_contrast,
+                       orient=HORIZONTAL, command=photo.contrast)
 scale_contrast.pack(side=LEFT)
 
 
-#окно настроек счета
+# окно настроек счета
 def checkbutton_changed(event=0):
     if enabled.get() == 1:
         photo.test(event)
     else:
         photo.test1()
 
+
 enabled = IntVar()
-btn4 = Checkbutton(frame_setting_calculat, text="Проверка", width=8, font=('ariel 15 bold'), variable=enabled, command=checkbutton_changed)
+btn4 = Checkbutton(frame_setting_calculate, text="Проверка", width=8, font='ariel 15 bold',
+                   variable=enabled, command=checkbutton_changed)
 btn4.pack(side=LEFT)
 
 v1 = IntVar()
-scale3 = Scale(frame_setting_calculat, from_=0, to=40, variable=v1, orient=HORIZONTAL, command=checkbutton_changed)
+scale3 = Scale(frame_setting_calculate, from_=0, to=40, variable=v1, orient=HORIZONTAL, command=checkbutton_changed)
 scale3.pack(side=LEFT)
 
-canvas3 = Canvas(frame_setting_calculat, width="40", height="40", relief=RIDGE, bd=2)
+canvas3 = Canvas(frame_setting_calculate, width="40", height="40", relief=RIDGE, bd=2)
 canvas3.pack(side=LEFT)
 
 
@@ -153,8 +160,10 @@ file_menu.add_command(label="Сохранить", command=photo.save)
 file_menu.add_separator()
 file_menu.add_command(label="Выход", command=root.destroy)
 
+
 def help_click():
     messagebox.showinfo("Тех. поддержка", "89119659493\n Александр")
+
 
 main_menu.add_cascade(label="File", menu=file_menu)
 main_menu.add_cascade(label="Тех. поддержка", command=help_click)
