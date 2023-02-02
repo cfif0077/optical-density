@@ -37,25 +37,23 @@ class Photo:
             self.size = (event.width, event.height)
             self.out()
 
-    def test(self):
-        # split the image into individual bands
+    def out_image_not_clean(self):
         source = self.image_clean.split()
         r, g, b = 0, 1, 2
-        # select regions where red is less than 200
         error = v1.get()
         mask_r = source[r].point(lambda i: -error <= i - self.rgb[r] <= error and 255)
         mask_g = source[g].point(lambda i: -error <= i - self.rgb[g] <= error and 255)
         mask_b = source[b].point(lambda i: -error <= i - self.rgb[b] <= error and 255)
         mask_all = asarray(mask_r)*asarray(mask_g)*asarray(mask_b)
-        # process the green band
+        # слой с зеленым цветом
         out = source[g].point(lambda i: i * 2)
-        # paste the processed band back, but only where red was < 100
+        # введение зеленого цвета только в нужные места
         source[g].paste(out, None, Image.fromarray(mask_all))
-        # build a new image
+        # построение нового фото
         self.image = Image.merge(self.image.mode, source)
         self.out()
 
-    def test1(self):
+    def out_image_clean(self):
         self.image = self.image_clean
         self.out()
 
@@ -132,9 +130,12 @@ scale_contrast.pack(side=LEFT)
 def checkbutton_changed(event=1):
     if enabled.get() == 1:
         if photo.rgb is not None:
-            photo.test()
+            photo.out_image_not_clean()
+        else:
+            error_not_rgb()
+            btn4.deselect()
     else:
-        photo.test1()
+        photo.out_image_clean()
 
 
 enabled = IntVar()
@@ -161,6 +162,10 @@ file_menu.add_command(label="Выход", command=root.destroy)
 
 def help_click():
     messagebox.showinfo("Тех. поддержка", "89119659493\n Александр")
+
+
+def error_not_rgb():
+    messagebox.showerror("Ошибка", "Выберите цвет")
 
 
 main_menu.add_cascade(label="File", menu=file_menu)
