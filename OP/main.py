@@ -4,7 +4,8 @@ from tkinter.filedialog import asksaveasfilename
 from tkinter import messagebox
 from PIL import Image, ImageTk, ImageEnhance
 import os
-from numpy import asarray
+from numpy import asarray, count_nonzero, shape
+from math import log10
 
 
 class Photo:
@@ -39,7 +40,6 @@ class Photo:
             self.out()
 
     def out_image_not_clean(self):
-        # TODO: добавить расчет
         source = self.image_clean.split()
         r, g, b = 0, 1, 2
         error = v1.get()
@@ -47,6 +47,10 @@ class Photo:
         mask_g = source[g].point(lambda i: -error <= i - self.rgb[g] <= error and 255)
         mask_b = source[b].point(lambda i: -error <= i - self.rgb[b] <= error and 255)
         mask_all = asarray(mask_r)*asarray(mask_g)*asarray(mask_b)
+        # расчет и выведение оптической плотности
+        entry_calculation.delete(0, END)
+        entry_calculation.insert(0, str(log10(count_nonzero(mask_all)/(shape(mask_all)[0]*shape(mask_all)[1]))))
+        print(entry_calculation.get())
         # слой с зеленым цветом
         out = source[g].point(lambda i: i * 2)
         # введение зеленого цвета только в нужные места
@@ -99,9 +103,6 @@ def help_click():
 
 def error_not_rgb():
     messagebox.showerror("Ошибка", "Выберите цвет")
-
-def calculation():
-    pass
 
 
 photo = Photo()
