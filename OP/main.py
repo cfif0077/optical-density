@@ -11,10 +11,19 @@ from math import log10
 class Photo:
     def __init__(self):
         self.flag = False
-        self.size = (900, 420)
+        self.size = (90, 50)
         self.rgb = None
+        self.good_pixel = None
+        self.true_good_pixel = None
+        self.error_good_pixel = 0
+        self.rgb_good_pixel = None
+        self.all_pixel = None
+        self.true_all_pixel = None
+        self.error_all_pixel = 0
+        self.rgb_all_pixel =None
 
     def out(self):
+        # TODO: решить проблему с первой разверткой фото
         self.flag = True
         self.image_resize = self.image.resize(self.size)
         self.image_clean_resize = self.image_clean.resize(self.size)
@@ -36,31 +45,50 @@ class Photo:
 
     def resize(self, event):
         self.size = (event.width, event.height)
+        print(self.size)
         if self.flag:
             self.out()
+
+    def out_image_clean(self):
+        self.image = self.image_clean
+        self.out()
 
     def out_image_not_clean(self):
         source = self.image_clean.split()
         r, g, b = 0, 1, 2
-        error = v1.get()
+        self.error_good_pixel = v1.get()
+        self.rgb_good_pixel = self.rgb
+        error = self.error_good_pixel
         mask_r = source[r].point(lambda i: -error <= i - self.rgb[r] <= error and 255)
         mask_g = source[g].point(lambda i: -error <= i - self.rgb[g] <= error and 255)
         mask_b = source[b].point(lambda i: -error <= i - self.rgb[b] <= error and 255)
         mask_all = asarray(mask_r)*asarray(mask_g)*asarray(mask_b)
-        # расчет и выведение оптической плотности
-        entry_calculation.delete(0, END)
-        entry_calculation.insert(0, str(log10(count_nonzero(mask_all)/(shape(mask_all)[0]*shape(mask_all)[1]))))
-        print(entry_calculation.get())
         # слой с зеленым цветом
         out = source[g].point(lambda i: i * 2)
         # введение зеленого цвета только в нужные места
         source[g].paste(out, None, Image.fromarray(mask_all))
         # построение нового фото
+        self.good_pixel = count_nonzero(mask_all)
         self.image = Image.merge(self.image.mode, source)
         self.out()
 
-    def out_image_clean(self):
-        self.image = self.image_clean
+    def out_image_delete(self):
+        source = self.image_clean.split()
+        r, g, b = 0, 1, 2
+        self.error_all_pixel = v1.get()
+        self.rgb_all_pixel = self.rgb
+        error = self.error_all_pixel
+        mask_r = source[r].point(lambda i: -error <= i - self.rgb[r] <= error and 255)
+        mask_g = source[g].point(lambda i: -error <= i - self.rgb[g] <= error and 255)
+        mask_b = source[b].point(lambda i: -error <= i - self.rgb[b] <= error and 255)
+        mask_all = asarray(mask_r)*asarray(mask_g)*asarray(mask_b)
+        # слой с зеленым цветом
+        out = source[r].point(lambda i: i * 2)
+        # введение зеленого цвета только в нужные места
+        source[r].paste(out, None, Image.fromarray(mask_all))
+        # построение нового фото
+        self.all_pixel = (shape(mask_all)[0]*shape(mask_all)[1])-count_nonzero(mask_all)
+        self.image = Image.merge(self.image.mode, source)
         self.out()
 
     def filter(self, event):
@@ -76,25 +104,58 @@ class Photo:
         image_for_color_balance = ImageEnhance.Color(image)
         self.image_clean = image_for_color_balance.enhance(var_color_balance.get() * 0.1 + 1)
 
-        checkbutton_changed()
+        radiobutton_changed()
+
+    def scale_change(self, event=1):
+        match select_photo_condition.get():
+            case "выбрать":
+                photo.out_image_not_clean()
+            case "исключить":
+                photo.out_image_delete()
+
+    def save_mask(self):
+        # сохранение слоя
+        match select_photo_condition.get():
+            case "выбрать":
+                if self.good_pixel is not None:
+                    self.true_good_pixel = self.good_pixel
+            case "исключить":
+                if self.all_pixel is not None:
+                    self.true_all_pixel = self.all_pixel
+        # расчет ОП
+        if self.true_good_pixel is not None and self.true_all_pixel is not None:
+            entry_calculation.delete(0, END)
+            entry_calculation.insert(0, str(log10(self.true_good_pixel / self.true_all_pixel)))
 
 
 def b3(event):
     photo.rgb = photo.image_clean_resize.getpixel((event.x, event.y))
     canvas3['bg'] = '#%02x%02x%02x' % photo.rgb
-    checkbutton_changed()
+    photo.scale_change()
 
 
 # окно настроек счета
-def checkbutton_changed(event=1):
-    if enabled.get() == 1:
-        if photo.rgb is not None:
-            photo.out_image_not_clean()
-        else:
-            error_not_rgb()
-            btn4.deselect()
-    else:
-        photo.out_image_clean()
+def radiobutton_changed(event=1):
+    match select_photo_condition.get():
+        case "нейтральное":
+            if photo.flag:
+                photo.out_image_clean()
+        case "выбрать":
+            if photo.rgb_good_pixel is not None:
+                canvas3['bg'] = '#%02x%02x%02x' % photo.rgb_good_pixel
+                photo.rgb = photo.rgb_good_pixel
+                scale3.set(photo.error_good_pixel)
+                photo.out_image_not_clean()
+            else:
+                canvas3['bg'] = "#f0f0f0"
+        case "исключить":
+            if photo.rgb_all_pixel is not None:
+                canvas3['bg'] = '#%02x%02x%02x' % photo.rgb_all_pixel
+                photo.rgb = photo.rgb_all_pixel
+                scale3.set(photo.error_all_pixel)
+                photo.out_image_delete()
+            else:
+                canvas3['bg'] = "#f0f0f0"
 
 
 def help_click():
@@ -125,7 +186,7 @@ frame_setting_calculate.pack(fill=Y)
 
 
 # окно с фото
-canvas2 = Canvas(frame_photo, width=900, height=420)
+canvas2 = Canvas(frame_photo, width=photo.size[0], height=photo.size[1])
 canvas2.pack(fill=BOTH, expand=1)
 
 
@@ -172,18 +233,25 @@ scale_color_balance = Scale(frame_setting_photo, from_=-10, to=10, variable=var_
                             orient=HORIZONTAL, command=photo.filter)
 scale_color_balance.pack(side=LEFT)
 
+# Состояние фото
+photo_condition = ["нейтральное", "выбрать", "исключить"]
+select_photo_condition = StringVar(value=photo_condition[0])
 
-enabled = IntVar()
-btn4 = Checkbutton(frame_setting_calculate, text="Проверка", width=8, font='ariel 15 bold',
-                   variable=enabled, command=checkbutton_changed)
-btn4.pack(side=LEFT)
+for condition in photo_condition:
+    btn_photo_condition = Radiobutton(frame_setting_calculate, font="ariel 15 bold", text=condition, value=condition,
+                                      variable=select_photo_condition, command=radiobutton_changed)
+    btn_photo_condition.pack(side=LEFT)
 
+# Размер выборки
 v1 = IntVar()
-scale3 = Scale(frame_setting_calculate, from_=0, to=50, variable=v1, orient=HORIZONTAL, command=checkbutton_changed)
+scale3 = Scale(frame_setting_calculate, from_=0, to=50, variable=v1, orient=HORIZONTAL, command=photo.scale_change)
 scale3.pack(side=LEFT)
 
 canvas3 = Canvas(frame_setting_calculate, width="40", height="40", relief=RIDGE, bd=2)
 canvas3.pack(side=LEFT)
+
+btn_save_mask = Button(frame_setting_calculate, text="Сохранение слоя", width=15, font='ariel 15 bold', command=photo.save_mask)
+btn_save_mask.pack(side=LEFT)
 
 entry_calculation = Entry(frame_setting_calculate, width=9, font='ariel 15 bold')
 entry_calculation.pack(side=LEFT)
@@ -205,3 +273,5 @@ root.bind('<Button-3>', b3)
 root.bind("<Configure>", photo.resize)
 
 root.mainloop()
+
+# TODO: добавить возможность убирать элементы в слое
