@@ -113,18 +113,35 @@ class Photo:
                 photo.out_image_delete()
 
     def number_point(self):
-        self.image_resize.save('test.jpg')
+        size = shape(self.image_clean.split()[0])
+        source = self.image_resize.resize(size).split()
+        r, g, b = 0, 1, 2
+        # счет добавляемых пикселей
+        mask_r_black = source[r].point(lambda i: i == 0 and 255)
+        mask_g_black = source[g].point(lambda i: i == 0 and 255)
+        mask_b_black = source[b].point(lambda i: i == 0 and 255)
+        mask_all_black = asarray(mask_r_black) * asarray(mask_g_black) * asarray(mask_b_black)
+        # счет убираемых пикселей
+        mask_r_white = source[r].point(lambda i: i == 255 and 255)
+        mask_g_white = source[g].point(lambda i: i == 255 and 255)
+        mask_b_white = source[b].point(lambda i: i == 255 and 255)
+        mask_all_white = asarray(mask_r_white) * asarray(mask_g_white) * asarray(mask_b_white)
+        return count_nonzero(mask_all_black)-count_nonzero(mask_all_white)
 
     def save_mask(self):
             # сохранение слоя
             match select_photo_condition.get():
                 case "выбрать":
                     if self.good_pixel is not None:
-                        self.true_good_pixel = self.good_pixel
-                    self.number_point()
+                        self.true_good_pixel = self.good_pixel + self.number_point()
+                    else:
+                        self.true_good_pixel = self.number_point()
                 case "исключить":
                     if self.all_pixel is not None:
-                        self.true_all_pixel = self.all_pixel
+                        self.true_all_pixel = self.all_pixel - self.number_point()
+                    else:
+                        self.true_all_pixel = shape(self.image_clean.split()[0])[0]*shape(self.image_clean.split()[0])[0] - self.number_point()
+                    # TODO: проверить работоспособность
             # расчет ОП
             if self.true_good_pixel is not None and self.true_all_pixel is not None:
                 entry_calculation.delete(0, END)
@@ -132,7 +149,7 @@ class Photo:
 
 class Paint:
     def __init__(self):
-        self.brush_size = 0
+        self.brush_size = 1
         self.color = 'black'
 
     # выбор цвета кисти
@@ -158,10 +175,10 @@ class Paint:
     # вывод предварительного размера кисти
     def out_canvas(self):
         # закрашивание предыдущего рисунка
-        canvas4.create_oval(0, 0,40,40, fill='#f0f0f0', outline="#f0f0f0")
+        canvas4.delete("oval")
         # нанесение нового рисунка
         canvas4.create_oval(24-self.brush_size, 24-self.brush_size,
-                            24+self.brush_size,24+self.brush_size, fill='black', outline='black')
+                            24+self.brush_size,24+self.brush_size,fill='black', outline='black', tags='oval')
 
 def b3(event):
     photo.rgb = photo.image_clean_resize.getpixel((event.x, event.y))
@@ -243,8 +260,8 @@ for condition in paint_condition:
 # толщина кисти
 brush_size = Label(frame_setting, text="Толщина:", font="ariel 15 bold")
 brush_size.pack(side=LEFT)
-var_brush_size = IntVar(value=0)
-scale_brush_size = Scale(frame_setting, from_=0, to=10, variable=var_brush_size,
+var_brush_size = IntVar(value=1)
+scale_brush_size = Scale(frame_setting, from_=1, to=10, variable=var_brush_size,
                      orient=HORIZONTAL, command=paint.brush)
 scale_brush_size.pack(side=LEFT)
 
@@ -328,3 +345,7 @@ root.bind("<Configure>", photo.resize)
 root.mainloop()
 
 # TODO: добавить возможность убирать элементы в слое
+# TODO:Добавить расчет закрашивания одинаковый для каждого слоя
+# Просто относительно слоя прибавлять или вычитать результат
+# Переделать способ рисования на линию
+# Добавить линии в массив и с помощью конпки их удалять
