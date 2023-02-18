@@ -5,7 +5,6 @@ from tkinter import messagebox
 from PIL import Image, ImageTk, ImageEnhance, ImageDraw
 import os
 from numpy import asarray, count_nonzero, shape
-from math import log10
 
 
 class Photo:
@@ -145,7 +144,7 @@ class Photo:
             # расчет ОП
             if self.true_good_pixel is not None and self.true_all_pixel is not None:
                 entry_calculation.delete(0, END)
-                entry_calculation.insert(0, str(log10(self.true_good_pixel / self.true_all_pixel)))
+                entry_calculation.insert(0, str(self.true_good_pixel / self.true_all_pixel))
 
 class Paint:
     def __init__(self):
@@ -218,7 +217,7 @@ photo = Photo()
 paint = Paint()
 
 root = Tk()  # Создание окна
-root.title("OP")
+root.title("Не оптическая плотность")
 root.geometry("900x700")
 
 frame_photo = Frame(root)
@@ -348,4 +347,4 @@ root.mainloop()
 # TODO:Добавить расчет закрашивания одинаковый для каждого слоя
 # Просто относительно слоя прибавлять или вычитать результат
 # Переделать способ рисования на линию
-# Добавить линии в массив и с помощью конпки их удалять
+# Добавить линии в массив и с помощью кнопки их удалять
