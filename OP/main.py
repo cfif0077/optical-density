@@ -260,7 +260,7 @@ for condition in paint_condition:
 brush_size = Label(frame_setting, text="Толщина:", font="ariel 15 bold")
 brush_size.pack(side=LEFT)
 var_brush_size = IntVar(value=1)
-scale_brush_size = Scale(frame_setting, from_=1, to=10, variable=var_brush_size,
+scale_brush_size = Scale(frame_setting, from_=1, to=20, variable=var_brush_size,
                      orient=HORIZONTAL, command=paint.brush)
 scale_brush_size.pack(side=LEFT)
 
@@ -311,7 +311,7 @@ for condition in photo_condition:
 
 # Размер выборки
 v1 = IntVar()
-scale3 = Scale(frame_setting_calculate, from_=0, to=50, variable=v1, orient=HORIZONTAL, command=photo.scale_change)
+scale3 = Scale(frame_setting_calculate, from_=0, to=100, variable=v1, orient=HORIZONTAL, command=photo.scale_change)
 scale3.pack(side=LEFT)
 
 canvas3 = Canvas(frame_setting_calculate, width="40", height="40", relief=RIDGE, bd=2)
